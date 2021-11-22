@@ -6,8 +6,6 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 
-#include <QThread>
-
 class Sondeur : public QMainWindow
 {
 	Q_OBJECT
@@ -19,9 +17,10 @@ private:
 	Ui::SondeurClass ui;
 
 	QSerialPort *port;
-
+	QString trameBuff;
 	QString trame;
 
 public slots:
 	void serialPortRead();
+	//void decodeTrame(QString trame);
 };

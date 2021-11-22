@@ -1,12 +1,12 @@
-#include "Sondeur.h"
+﻿#include "Sondeur.h"
 #include "Qdebug"
+#include <QRegExp>
 #define PORT "COM1"
 
 Sondeur::Sondeur(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
-
 
 	port = new QSerialPort(this);
 	QObject::connect(port, SIGNAL(readyRead()), this, SLOT(serialPortRead()));
@@ -21,23 +21,75 @@ Sondeur::Sondeur(QWidget *parent)
 	if (port -> isOpen())
 	{
 		qDebug() << "Ping Pong";
-	}
-	else
+	} else
 	{
 		qDebug() << "Ching Chong";
 	}
 }
 
-void Sondeur::serialPortRead()
-{
-	QByteArray Trame_Recu = port->readAll();
+void Sondeur::serialPortRead() {
 
-	trame = trame + Trame_Recu.toStdString().c_str();
+	QByteArray data = port->read(port->bytesAvailable());
+	QString str(data);
+	trameBuff += str;
 
-	//Afficher les trames pour voir comment elles sont
-	qDebug() << " Trame : " << trame << " \n ";
+	//qDebug() << trameBuff;
 
+	QRegExp startMatch("GPGGA(.+)")
+		, stopMatch("(\\*)");
+
+	int startByte = startMatch.indexIn(trameBuff);
+
+	if (startByte > -1 && startByte > 0 && stopMatch.indexIn(trameBuff, startByte + 1) > -1) {
+
+		// qDebug() << trameBuff;
+		QRegExp regex("GPGGA,(.+)(\\*)");
+		int test = regex.indexIn(trameBuff);
+
+		qDebug() << trameBuff;
+
+		QStringList list = regex.capturedTexts();
+		trameBuff.replace(0, stopMatch.indexIn(trameBuff, startByte + 1), "");
+
+		// -- D�coupe notre chaine � chaque virgules
+		QStringList data = list.at(1).split(',', Qt::SkipEmptyParts);
+
+		QString Longitude = data.at(1)
+			, Latitude = data.at(3)
+			, Timestamp = data.at(0);
+		// -- Conversion
+		int LongitudeDot = Longitude.indexOf(".")
+			, LatitudeDot = Latitude.indexOf(".");
+
+		Longitude.insert(LongitudeDot - 2, ",");
+		Latitude.insert(LatitudeDot - 2, ",");
+
+		QStringList LatitudeSplit = Latitude.split(",");
+		double LatitudeDivide = LatitudeSplit.at(1).toDouble() / 60;
+		double LatitudePDivide = LatitudeSplit.at(0).toDouble();
+		double VraiLatitude = LatitudeDivide + LatitudePDivide;
+
+		QStringList LongitudeSplit = Longitude.split(",");
+		double LongitudeDivide = LongitudeSplit.at(1).toDouble() / 60;
+		double LongitudePDivide = LongitudeSplit.at(0).toDouble();
+		double VraiLongitude = LongitudeDivide + LongitudePDivide;
+
+		QString LongitudeString = QString::number(VraiLongitude);
+
+		QString LatitudeString = QString::number(VraiLatitude);
+
+		qDebug() << "Longitude : " << VraiLongitude;
+		qDebug() << "Latitude : " << VraiLatitude;
+
+		ui.Label->setText(LatitudeString);
+		ui.label->setText(LongitudeString);
+
+	}
+	QStringList list;
+}
+	
 	//$SDMTW,,,C*36		:: Temperature
 	//$SDDPT,,*57		:: Profondeur
-}
-// $GPAPB,V,A,0.07,L,N,V,V,1.8,T,,0.7,T,,*46\r\n$GPGLL,4952.6634,N,00218.1741,E,000042,V*3E\r\n$GPRMB,V,0.07,L,,,4956.5190,N,00218.2502,E,3.86,0.7,0.0,V*11\r\n$GPRMC,000042,V,4952.6634,N,00218.1741,E,0.0,0.0,010200,2.0,W*71\r\n$GPGGA,000042,4952.6634,N,00218.1741,E,0,0,50.00,-47,M,,,,*26\r\n$GPGSA,A,1,,,,,,,,,,,,,50.00,50.00,50.00*35\r\n$GPGSV,1,1,1,27,,0,*7D\r\n$SDMTW,,,C*36\r\n$SDDPT,,*57\r\n$SDDBT,,,,,,*45\r\n
+
+	//Coordonnée
+	//$GPGGA, 00 00 42, 4952.6634, N, 00218.1741, E, 0, 0, 50.00, -47, M, , , , *26\r\n

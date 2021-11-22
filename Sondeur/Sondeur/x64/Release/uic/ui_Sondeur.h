@@ -11,6 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QStatusBar>
@@ -22,25 +23,34 @@ QT_BEGIN_NAMESPACE
 class Ui_SondeurClass
 {
 public:
+    QWidget *centralWidget;
+    QLabel *Label;
+    QLabel *label;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
-    QWidget *centralWidget;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *SondeurClass)
     {
         if (SondeurClass->objectName().isEmpty())
             SondeurClass->setObjectName(QString::fromUtf8("SondeurClass"));
-        SondeurClass->resize(600, 400);
+        SondeurClass->resize(852, 665);
+        centralWidget = new QWidget(SondeurClass);
+        centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
+        Label = new QLabel(centralWidget);
+        Label->setObjectName(QString::fromUtf8("Label"));
+        Label->setGeometry(QRect(70, 80, 191, 81));
+        label = new QLabel(centralWidget);
+        label->setObjectName(QString::fromUtf8("label"));
+        label->setGeometry(QRect(70, 100, 171, 91));
+        SondeurClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(SondeurClass);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
+        menuBar->setGeometry(QRect(0, 0, 852, 21));
         SondeurClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(SondeurClass);
         mainToolBar->setObjectName(QString::fromUtf8("mainToolBar"));
-        SondeurClass->addToolBar(mainToolBar);
-        centralWidget = new QWidget(SondeurClass);
-        centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
-        SondeurClass->setCentralWidget(centralWidget);
+        SondeurClass->addToolBar(Qt::TopToolBarArea, mainToolBar);
         statusBar = new QStatusBar(SondeurClass);
         statusBar->setObjectName(QString::fromUtf8("statusBar"));
         SondeurClass->setStatusBar(statusBar);
@@ -53,6 +63,8 @@ public:
     void retranslateUi(QMainWindow *SondeurClass)
     {
         SondeurClass->setWindowTitle(QCoreApplication::translate("SondeurClass", "Sondeur", nullptr));
+        Label->setText(QString());
+        label->setText(QString());
     } // retranslateUi
 
 };
